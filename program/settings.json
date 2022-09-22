@@ -1,7 +1,7 @@
 {
     "set_hour": 0,
     "set_minute": 0,
-    "set_enable": true,
+    "set_enable": false,
     "cp_save_path": "C:/slip",
     "shot_save_path": "C:/sshot",
     "record_save_path": "C:/rrecord",

@@ -48,10 +48,11 @@ class Ui_AboutWindow(object):
         self.graphicsView.setInteractive(False)
         self.graphicsView.setDragMode(QtWidgets.QGraphicsView.NoDrag)
         self.graphicsView.setObjectName("graphicsView")
+        self.graphicsView.setStyleSheet("border:0px")
 
         # 显示logo及解决透明问题
         self.scene = QtWidgets.QGraphicsScene()
-        img = cv2.imread("..//img//about.png")
+        img = cv2.imread("..//img//about.jpg")
         cvimg = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         y, x = img.shape[:-1]
         frame = QImage(cvimg, x, y, QImage.Format_RGB888)
@@ -67,7 +68,7 @@ class Ui_AboutWindow(object):
         _translate = QtCore.QCoreApplication.translate
         AboutWindow.setWindowTitle(_translate("AboutWindow", "关于"))
         self.AboutLabel.setText(_translate("AboutWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:12pt; font-weight:600;\">Sk_recorder</span></p><p>软件作者: Skyler Sun</p><p>软件遵循GPLv3.0协议, 详情请访问软件地址</p><p>软件版本v0.1.0</p></body></html>"))
-        self.AboutDealLabel.setText(_translate("AboutWindow", "<html><head/><body><p align=\"justify\"><span style=\" font-size:9pt; font-weight:600; color:#ff0000;\">声明: 本软件仅供学习交流和日常使用, 如作他用所承担的法律责任一概与</span></p><p align=\"justify\"><span style=\" font-size:9pt; font-weight:600; color:#ff0000;\">作者无关(下载使用即代表你同意上述观点)</span></p></body></html>"))
+        self.AboutDealLabel.setText(_translate("AboutWindow", "<html><head/><body><p align=\"justify\"><span style=\" font-size:9pt; font-weight:600; color:#ff0000;\">声明: 本软件仅供学习交流和日常使用, 如作他用所承担的法律责任一</span></p><p align=\"justify\"><span style=\" font-size:9pt; font-weight:600; color:#ff0000;\">概与作者无关(下载使用即代表你同意上述观点)</span></p></body></html>"))
         self.AboutLinkLabel.setText(_translate("AboutWindow", "<html><head/><body><p><a href=\"3385213313@qq.com\"><span style=\" text-decoration: underline; color:#0000ff;\">3385213313@qq.com</span></a></p><p><a href=\"https://github.com/Skyler-std/Sk_recorder\"><span style=\" text-decoration: underline; color:#0000ff;\">https://github.com/Skyler-std/Sk_recorder</span></a></p></body></html>"))
 
 

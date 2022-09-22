@@ -7,9 +7,6 @@
 # WARNING! All changes made in this file will be lost!
 
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from log import rm_log, view_log, add_log
-
 import sys
 import os
 import subprocess
@@ -17,11 +14,22 @@ from json import load, dump
 from threading import Thread
 from shutil import copyfile
 
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtGui import QImage, QPixmap
+import pynput.mouse as pm
+import cv2
+from log import rm_log, view_log, add_log
+
 
 CREATE_NO_WINDOW = 0x08000000
 
 
 class Ui_MainWindow(object):
+    def __init__(self):
+        self.x = []
+        self.y = []
+        self.click_time = 0
+    
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(622, 618)
@@ -138,10 +146,10 @@ class Ui_MainWindow(object):
         self.CpHelpBg.setGeometry(QtCore.QRect(420, 340, 191, 171))
         self.CpHelpBg.setObjectName("CpHelpBg")
         self.CpAutoRunCheckBox = QtWidgets.QCheckBox(self.centralwidget)
-        self.CpAutoRunCheckBox.setGeometry(QtCore.QRect(240, 440, 121, 31))
+        self.CpAutoRunCheckBox.setGeometry(QtCore.QRect(240, 440, 123, 31))
         self.CpAutoRunCheckBox.setObjectName("CpAutoRunCheckBox")
         self.AutoRunCheckBox = QtWidgets.QCheckBox(self.centralwidget)
-        self.AutoRunCheckBox.setGeometry(QtCore.QRect(240, 490, 121, 31))
+        self.AutoRunCheckBox.setGeometry(QtCore.QRect(240, 490, 123, 31))
         self.AutoRunCheckBox.setObjectName("AutoRunCheckBox")
         self.CpHelpBg.raise_()
         self.graphicsView.raise_()
@@ -226,7 +234,7 @@ class Ui_MainWindow(object):
             add_log("#######Program finished#######")
             sys.exit(0)
 
-        # 信号连接槽函数
+        # ===============================信号连接槽函数================================
         self.ExitButton.clicked.connect(main_exit)
         self.action_about.triggered.connect(self.run_about)
         self.actionDonate.triggered.connect(self.run_donate)
@@ -241,7 +249,74 @@ class Ui_MainWindow(object):
         self.CpDisableButton.clicked.connect(self.cp_disable)
         self.AutoRunCheckBox.clicked.connect(self.auto_run)
         self.CpAutoRunCheckBox.clicked.connect(self.auto_run_cp)
+        self.SshotAllGetButton.clicked.connect(self.shot_all_get)
+        self.SshotPartGetButton.clicked.connect(self.shot_part_get)
+        self.RecordAllGetButton.clicked.connect(self.record_all_get)
+        self.RecordPartGetButton.clicked.connect(self.record_part_get)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+
+    def record_all_get(self):
+        """全屏录屏"""
+        def r_th_f():
+            subprocess.call('record.exe full')
+        r_th = Thread(target=r_th_f, daemon=True)
+        r_th.start()
+    
+    
+    def record_part_get(self):
+        """框选录屏"""
+        def listener(x, y, button, pressed):
+            if pressed and (button == pm.Button.left):
+                add_log("Button left detected")
+                self.click_time += 1
+                if self.click_time < 3:
+                    self.x.append(x)
+                    self.y.append(y)
+                    add_log(f"Current value x is {str(self.x)}")
+                    add_log(f"Current value y is {str(self.y)}")
+                elif self.click_time >= 3:
+                    return False
+
+        def listen_tth_f():
+            with pm.Listener(on_click=listener) as pmlistener:
+                pmlistener.join()
+
+        def get_tth_f():
+            while True:
+                if len(self.x) == 2 and len(self.y) == 2:
+                    add_log("Start to part record")
+                    add_log("Running f-record.exe part {self.x[0]} {self.y[0]} {self.x[1]} {self.y[1]}")
+                    subprocess.call(f'record.exe part {self.x[0]} {self.y[0]} {self.x[1]} {self.y[1]}')
+                    add_log("Run successful, waiting to save and reset value")
+                    self.x.clear()
+                    self.y.clear()
+                    self.click_time = 0
+                    add_log("Ending threads")
+                    break
+        add_log("Setting threads to part shot")
+        listen_tth = Thread(target=listen_tth_f, daemon=True)
+        get_tth = Thread(target=get_tth_f, daemon=True)
+        add_log("Starting threads")
+        listen_tth.start()
+        get_tth.start()
+        add_log("Start successful")
+            
+
+
+    def shot_part_get(self):
+        """框选截图"""
+        from win_shot_part_help import SshotPartGetWindow
+        SshotPartGetWindow.show()
+
+
+    def shot_all_get(self):
+        """全屏截图"""
+        def shot_all_f():
+            subprocess.call('shot.exe full')
+        shot_all_th = Thread(target=shot_all_f, daemon=True)
+        shot_all_th.start()
+
 
     def auto_run_cp(self):
         """自启剪切板"""
@@ -336,6 +411,7 @@ class Ui_MainWindow(object):
             app_tth = Thread(target=app_ff, daemon=True)
             app_tth.start()
 
+
     def cp_disable(self):
         """禁用剪切板功能"""
         self.CpEnableButton.setEnabled(True)
@@ -347,6 +423,11 @@ class Ui_MainWindow(object):
         with open('settings.json', 'w') as f:
             dump(config, f, indent=4)
         add_log("Done!")
+        def cp_kill_f():
+            subprocess.call('taskkill /f /im clip.exe', creationflags=CREATE_NO_WINDOW)
+        cp_kill_th = Thread(target=cp_kill_f, daemon=True)
+        cp_kill_th.start()
+
 
     def cp_enable(self):
         """启用剪切板功能"""
@@ -359,6 +440,11 @@ class Ui_MainWindow(object):
         with open('settings.json', 'w') as f:
             dump(config, f, indent=4)
         add_log("Done!")
+        def cp_start_f():
+            subprocess.call('clip.exe', creationflags=CREATE_NO_WINDOW)
+        cp_start_th = Thread(target=cp_start_f, daemon=True)
+        cp_start_th.start()
+
 
     def record_open_folder(self):
         """打开截图保存文件夹"""
@@ -376,6 +462,7 @@ class Ui_MainWindow(object):
         open_th.start()
         add_log("Thread create successful")
 
+
     def record_file_choice(self):
         """选择截屏保存位置"""
         save_dialog = QtWidgets.QFileDialog.getExistingDirectory(None, "选择保存位置", 'C:/rrecord')
@@ -387,6 +474,7 @@ class Ui_MainWindow(object):
                 dump(config, f, indent=4)
             self.RecordTextBrowser.clear()
             self.RecordTextBrowser.append(save_dialog)
+
 
     def shot_open_folder(self):
         """打开截图保存文件夹"""
@@ -400,6 +488,7 @@ class Ui_MainWindow(object):
         open_th = Thread(target=open_th_f, daemon=True)
         open_th.start()
 
+
     def shot_file_choice(self):
         """选择截屏保存位置"""
         save_dialog = QtWidgets.QFileDialog.getExistingDirectory(None, "选择保存位置", 'C:/sshot')
@@ -412,12 +501,14 @@ class Ui_MainWindow(object):
             self.SshotTextBrowser.clear()
             self.SshotTextBrowser.append(save_dialog)
 
+
     def run_about(self):
         """运行关于窗口"""
         add_log("Loading AboutWindow")
         from win_about import AboutWindow
         AboutWindow.show()
         add_log("Load successful")
+
 
     def run_donate(self):
         """运行捐赠窗口"""
@@ -426,6 +517,7 @@ class Ui_MainWindow(object):
         DonateWindow.show()
         add_log("Load successful")
 
+
     def run_setting(self):
         """运行设置窗口"""
         add_log("Loading SettingWindow")
@@ -433,23 +525,24 @@ class Ui_MainWindow(object):
         SettingWindow.show()
         add_log("Load successful")
 
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Sk_recorder(By: Skyler Sun)"))
-        self.SshotLabel.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; font-weight:600; color:#474fbe;\">选择截图保存位置</span></p></body></html>"))
+        self.SshotLabel.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; font-weight:600; color:#64ea3f;\">选择截图保存位置</span></p></body></html>"))
         self.SshotFileChoiceButton.setText(_translate("MainWindow", "浏览"))
-        self.SshotAllGetButton.setText(_translate("MainWindow", "全屏截图"))
-        self.SshotPartGetButton.setText(_translate("MainWindow", "框选截图"))
-        self.SshotOpenSaveButton.setText(_translate("MainWindow", "打开截图保存文件夹"))
+        self.SshotAllGetButton.setText(_translate("MainWindow", "全屏"))
+        self.SshotPartGetButton.setText(_translate("MainWindow", "框选"))
+        self.SshotOpenSaveButton.setText(_translate("MainWindow", "打开保存位置"))
         self.SshotSaveLabel.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; font-weight:600; color:#53c1ba;\">保存位置</span></p></body></html>"))
         self.SshotTitleLabel.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:16pt; font-weight:600;\">截屏功能区</span></p></body></html>"))
         self.RecordTitleLabel.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:16pt; font-weight:600;\">录屏功能区</span></p></body></html>"))
         self.RecordSaveLable.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; font-weight:600; color:#53c1ba;\">保存位置</span></p></body></html>"))
-        self.RecordOpenSaveButton.setText(_translate("MainWindow", "打开录屏保存文件夹"))
-        self.RecordLabel.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; font-weight:600; color:#474fbe;\">选择截图保存位置</span></p></body></html>"))
-        self.RecordPartGetButton.setText(_translate("MainWindow", "框选录屏"))
+        self.RecordOpenSaveButton.setText(_translate("MainWindow", "打开保存位置"))
+        self.RecordLabel.setText(_translate("MainWindow", "<html><head/><body><p><span style=\" font-size:12pt; font-weight:600; color:#64ea3f;\">选择截图保存位置</span></p></body></html>"))
+        self.RecordPartGetButton.setText(_translate("MainWindow", "框选"))
         self.RecordFileChoiceButton.setText(_translate("MainWindow", "浏览"))
-        self.RecordAllGetButton.setText(_translate("MainWindow", "全屏录屏"))
+        self.RecordAllGetButton.setText(_translate("MainWindow", "全屏"))
         self.ExitButton.setText(_translate("MainWindow", "退出"))
         self.SshotViewLabel.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:12pt; font-weight:600;\">截屏预览</span></p></body></html>"))
         self.CpEnableButton.setText(_translate("MainWindow", "启用剪切板保存功能"))

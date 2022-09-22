@@ -1,1 +1,1 @@
-E:\peng\PythonProjects\Sk_recorder\program\main.py
+e:\peng\PythonProjects\Sk_recorder\program\main.py

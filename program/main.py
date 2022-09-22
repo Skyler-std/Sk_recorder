@@ -5,6 +5,7 @@
 from PyQt5 import QtWidgets
 from win_main import Ui_MainWindow
 from log import add_log
+from qt_material import apply_stylesheet
 
 from time import sleep
 import os
@@ -35,6 +36,7 @@ if __name__ == "__main__":
     MainWindow = QtWidgets.QMainWindow()
     ui_main = Ui_MainWindow()
     ui_main.setupUi(MainWindow)
+    apply_stylesheet(app, theme='dark_cyan.xml')
     add_log("Init done")
     sleep(0.1)
     add_log("Start to show MainWindow")

@@ -167,7 +167,7 @@ class Ui_SettingWindow(object):
         self.RecordTimeEnableButton.setText(_translate("SettingWindow", "启用自定义录屏时长"))
         self.RecordTimeDisableButton.setText(_translate("SettingWindow", "禁用自定义录屏时长"))
         self.RecordTimeOkButton.setText(_translate("SettingWindow", "确定"))
-        self.ClipPathButton.setText(_translate("SettingWindow", "点击设置剪切板保存位置"))
+        self.ClipPathButton.setText(_translate("SettingWindow", "设置剪切板保存位置"))
         self.label.setText(_translate("SettingWindow", "<html><head/><body><p align=\"center\"><span style=\" font-size:12pt;\">剪切板设定保存位置(为空则为缺省值)</span></p></body></html>"))
         self.SettingExitButton.setText(_translate("SettingWindow", "应用并退出"))
 
