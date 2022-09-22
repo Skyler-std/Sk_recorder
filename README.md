@@ -6,5 +6,9 @@
 
 提取密码:acdx
 
-v0.0.2-stable版本需要将下载文件Sk_recorder001.7z Sk_recorder002.7z重命名为Sk_recorder.7z.001 Sk_recorder.7z.002方可解压
+v0.0.2-stable版本需要将下载文件
+Sk_recorder001.7z Sk_recorder002.7z
+重命名为
+Sk_recorder.7z.001 Sk_recorder.7z.002
+方可解压
 v0.0.2截图预览暂时无法实现
